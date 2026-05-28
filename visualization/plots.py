@@ -31,7 +31,7 @@ def _apply_research_theme(fig, title="", height=400):
     fig.update_layout(
         title={
             'text': f"<b>{title.upper()}</b>", 
-            'font': {'size': 14, 'color': PALETTE['text_muted'], 'family': 'Inter'}
+            'font': {'size': 14, 'color': PALETTE['text_muted']}
         },
         template="plotly_dark",
         paper_bgcolor='rgba(0,0,0,0)',
@@ -46,15 +46,14 @@ def _apply_research_theme(fig, title="", height=400):
         ),
         xaxis=dict(
             gridcolor=PALETTE['grid'], linecolor=PALETTE['axis'], showline=True,
-            tickfont={'size': 11}, titlefont={'size': 12}
+            tickfont={'size': 11}, title={'font': {'size': 12}}
         ),
         yaxis=dict(
             gridcolor=PALETTE['grid'], linecolor=PALETTE['axis'], showline=True,
-            tickfont={'size': 11}, titlefont={'size': 12}
-        ),
-        dragmode='pan', hovermode='x unified'
+            tickfont={'size': 11}, title={'font': {'size': 12}}
+        )
     )
-    # Hide modebar
+    # Default settings for all axes
     fig.update_xaxes(showgrid=True, zeroline=False)
     fig.update_yaxes(showgrid=True, zeroline=False)
     return fig
