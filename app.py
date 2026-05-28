@@ -83,7 +83,7 @@ else:
         with col_m2:
             st.plotly_chart(plot_reward_breakdown(training_logs), use_container_width=True, config={'displayModeBar': False})
             merged = safe_res.join(env_data[['price_usd_kwh', 'carbon_intensity']])
-            st.plotly_chart(plot_policy_behavior(merged, 'price_usd_kwh', 'batt_kw', 'soc'), use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(plot_cumulative_value(merged), use_container_width=True, config={'displayModeBar': False})
         
         st.divider()
         st.markdown("### 🔍 Strategic Insight Deep-Dive")
