@@ -68,6 +68,7 @@ def plot_dual_training_curve(df):
                                  name="SAFE PPO (LAGRANGIAN)", line=dict(color=PALETTE['cyan'], width=2)))
     fig.add_trace(graph_objects.Scatter(x=df['episode'], y=df['reward_std'], 
                                  name="BASELINE PPO", line=dict(color=PALETTE['text_muted'], width=1.5, dash='dot')))
+    fig.update_layout(yaxis=dict(title="Cumulative Reward (Score)"))
     return _apply_research_theme(fig, "Convergence Dynamics")
 
 def plot_multiplier_evolution(df):
@@ -91,10 +92,15 @@ def plot_reward_breakdown(df):
 
 def plot_policy_behavior(df_results, x_col='price_usd_kwh', y_col='batt_kw', color_col='soc', title="Policy Decision Map"):
     fig = px.scatter(df_results, x=x_col, y=y_col, color=color_col,
-                    color_continuous_scale='Blues', opacity=0.7)
+                    color_continuous_scale='Blues', opacity=0.7,
+                    labels={
+                        'price_usd_kwh': 'Market Price ($/kWh)',
+                        'batt_kw': 'Battery Action (kW) [>0 Discharge, <0 Charge]',
+                        'soc': 'State of Charge (%)'
+                    })
     fig.update_traces(marker=dict(size=5))
     fig.add_hline(y=0, line=dict(color='#FFF', width=0.5, dash='dash'))
-    return _apply_research_theme(fig, title)
+    return _apply_research_theme(fig, "Agent Price Sensitivity (Reflexes)")
 
 def plot_pareto_frontier(metrics_df):
     cmap = _get_agent_color_map(metrics_df['Agent'].unique())
