@@ -123,6 +123,8 @@ class MicrogridEnv(gym.Env):
             "step": self.current_step - 1,
             "batt_kw": batt_kw,
             "ev_kw": ev_kw,
+            "raw_batt_kw": raw_batt_kw,
+            "raw_ev_kw": raw_ev_kw,
             "grid_import": grid_import,
             "grid_export": grid_export,
             "soc": self.soc,

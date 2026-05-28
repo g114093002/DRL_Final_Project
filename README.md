@@ -1,32 +1,44 @@
-# Safe and Carbon-Aware DRL for Data Center Microgrid
+# Safe & Carbon-Aware DRL for Data Center Microgrids
 
-This project is a Streamlit-based Demo Dashboard demonstrating a **Safe and Carbon-Aware Deep Reinforcement Learning** agent for Data Center behind-the-meter microgrid energy management.
+A research-oriented energy management platform demonstrating **Safe Reinforcement Learning** in microgrid environments.
 
-## Project Motivation
-Data centers are massive energy consumers. Managing their energy via microgrids (PV + Batteries) can reduce costs and carbon footprints. However, batteries have life-cycles (degradation) and strict safety constraints (SoC limits). This project showcases how Safe DRL (PPO-Lagrangian) can balance these competing objectives.
+## Research Objectives
+This project explores the optimization of behind-the-meter data center microgrids using a **Constrained Markov Decision Process (CMDP)** framework. The goals are:
+1. **Carbon-Aware Dispatch**: Adapting IT load and storage actions to real-time grid carbon intensity.
+2. **Safety-Constrained Optimization**: Utilizing PPO-Lagrangian to satisfy SoC and power constraints.
+3. **Multi-Objective Trade-offs**: Balancing economic cost, emissions, and battery degradation.
+
+## Methodology Note
+To provide a comprehensive research demo, this platform utilizes:
+- **PPO-Lagrangian Agent**: A Safe-RL controller balancing rewards and dynamic constraint penalties ($\lambda$).
+- **Deterministic Safety Layer**: A hard-coded filter ensuring physical feasibility of battery actions.
+- **Explainable Analysis**: Synthetic training traces are provided in the "DRL Model Analysis" tab to demonstrate the theoretical convergence behavior of CMDP solvers.
 
 ## System Architecture
-1. **Observation**: Load, PV, Price, Carbon, SoC, EV.
-2. **Agent**: PPO-Lagrangian with Carbon-Aware reward.
-3. **Safety Layer**: Deterministic constraint satisfaction.
-4. **Environment**: Simulated microgrid with synthetic data.
+```mermaid
+graph TD
+    Obs(Observation) --> Agent(PPO-Lagrangian)
+    Agent --> Raw(Raw Action)
+    Raw --> SL(Safety Layer)
+    SL --> Safe(Safe Action)
+    Safe --> Env(Microgrid)
+    Env --> R(Reward)
+    Env --> C(Constraint)
+    C & R --> Update(Policy Update)
+```
 
 ## Features
-- Interactive Streamlit Dashboard.
-- Multiple control strategies (Baseline vs. Safe DRL).
-- Multi-objective optimization (Cost, Carbon, Health, Safety).
-- Sensitivity analysis (PV forecast error, weight tuning).
+- **DRL Model Analysis**: Training rewards, constraint costs, and Lagrangian multiplier evolution.
+- **Policy Behavior Mapping**: Visualizing how the agent responds to prices, carbon, and SoC.
+- **Strategy Benchmarking**: Comparing Rule-based, Greedy, and Safe DRL policies.
+- **Pareto Frontier Analysis**: Understanding the trade-off between cost and carbon.
 
-## How to Run
+## Installation & Run
 1. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-2. Run the dashboard:
+2. Run the platform:
    ```bash
    streamlit run app.py
    ```
-
-## Methods
-- **PPO-Lagrangian**: Uses a Lagrangian multiplier to dynamically adjust penalties for constraint violations.
-- **Safety Layer**: Ensures battery power and SoC stay within physical and operational limits regardless of agent output.
