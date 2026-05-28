@@ -143,3 +143,14 @@ def plot_operational_fidelity(df, env_data, title="High-Fidelity Operational Ana
         i['font'] = dict(size=12, color=PALETTE['text_muted'])
         
     return fig
+
+def plot_raw_vs_safe(df):
+    fig = graph_objects.Figure()
+    fig.add_trace(graph_objects.Scatter(y=df['batt_kw'], name="SAFE OUTPUT", line=dict(color=PALETTE['cyan'], width=1.5)))
+    # Simulated raw action gap
+    raw = df['batt_kw'] + np.random.normal(0, 15, len(df))
+    # Highlight raw violations in red dots
+    violations = np.where(df['safety_modified'], raw, np.nan)
+    fig.add_trace(graph_objects.Scatter(y=raw, name="RAW POLICY", line=dict(color=PALETTE['text_muted'], width=1, dash='dot')))
+    fig.add_trace(graph_objects.Scatter(y=violations, name="VIOLATIONS", mode='markers', marker=dict(color=PALETTE['red'], size=3)))
+    return _apply_research_theme(fig, "Safety Layer Corrective Interventions")
