@@ -93,5 +93,16 @@ class MicrogridEnv(gym.Env):
             
         self.prev_batt_power = batt_kw
         self.current_step += 1
-        info = { "step": self.current_step - 1, "batt_kw": batt_kw, "soc": self.soc, "cost": cost, "safety_modified": s_info["modified"] }
+        info = { 
+            "step": self.current_step - 1, 
+            "batt_kw": batt_kw, 
+            "soc": self.soc, 
+            "cost": cost, 
+            "carbon": carbon,
+            "degradation": degrad,
+            "soc_violation": soc_violation,
+            "safety_modified": s_info["modified"],
+            "grid_import": grid_import,
+            "grid_export": grid_export
+        }
         return self._get_obs(), reward, self.current_step >= self.horizon, False, info
