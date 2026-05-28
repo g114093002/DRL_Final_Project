@@ -87,17 +87,27 @@ def plot_reward_breakdown(df):
     fig.update_traces(line=dict(width=0.5))
     return _apply_research_theme(fig, "Reward Component Breakdown")
 
-def plot_policy_behavior(df_results, x_col='price_usd_kwh', y_col='batt_kw', color_col='soc', title="Policy Decision Map"):
+def plot_policy_behavior(df_results, x_col='price_usd_kwh', y_col='batt_kw', color_col='soc', title="Agent Strategic Reflexes"):
+    # 使用更有直覺感的配色：從紅色（空電）到綠色（滿電）
     fig = px.scatter(df_results, x=x_col, y=y_col, color=color_col,
-                    color_continuous_scale='Blues', opacity=0.7,
+                    color_continuous_scale='RdYlGn', opacity=0.8,
                     labels={
                         'price_usd_kwh': 'Market Price ($/kWh)',
-                        'batt_kw': 'Battery Action (kW) [>0 Discharge, <0 Charge]',
-                        'soc': 'State of Charge (%)'
+                        'batt_kw': 'Action (kW) [>0 Discharge, <0 Charge]',
+                        'soc': 'SoC Status (Red: Empty, Green: Full)'
                     })
-    fig.update_traces(marker=dict(size=5))
-    fig.add_hline(y=0, line=dict(color='#FFF', width=0.5, dash='dash'))
-    return _apply_research_theme(fig, "Agent Price Sensitivity (Reflexes)")
+    fig.update_traces(marker=dict(size=6, line=dict(width=0.5, color='gray')))
+    fig.add_hline(y=0, line=dict(color='#FFF', width=0.8, dash='dash'))
+    
+    # 優化佈局與說明
+    fig.update_layout(
+        coloraxis_colorbar=dict(
+            title="SoC Level",
+            tickvals=[0.2, 0.5, 0.8],
+            ticktext=["EMPTY", "MID", "FULL"]
+        )
+    )
+    return _apply_research_theme(fig, "Strategic Reflex Map (Price vs SoC)")
 
 def plot_pareto_frontier(metrics_df):
     cmap = _get_agent_color_map(metrics_df['Agent'].unique())
