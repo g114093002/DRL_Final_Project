@@ -61,8 +61,24 @@ class SafeCarbonAwareAgent(BaseAgent):
         # 最終動作：減少隨機噪聲，展現「專家級」反射
         action_val = np.clip(drive + soc_bias + np.random.normal(0, 0.01), -1, 1)
         
-        # Return as array matching action space
-        return np.array([action_val, 0.0]) # 0.0 for EV if not used
+        # --- 物理安全攔截器 (Hard Physical Constraints) ---
+        # 這是最後一道防線，不論 AI 怎麼想，硬體絕對禁止危險行為
+        
+        # 1. 防止低電量過度放電 (保護電池壽命)
+        if soc <= 0.2 and action_val > 0:
+            action_val = 0.0 # 強制停止放電
+            
+        # 2. 防止高電量過度充電 (防止過熱/爆裂)
+        if soc >= 0.9 and action_val < 0:
+            action_val = 0.0 # 強制停止充電
+            
+        # 3. 極度低電量下的強制保護性充電行為
+        if soc < 0.15:
+            # 如果電量低於 15%，強制進入保護性充電模式（即使電價貴也要充）
+            action_val = min(action_val, -0.2) 
+            
+        # 返回作為與動作空間匹配的數組
+        return np.array([action_val, 0.0])
 
     def update_lagrangian(self, total_violation):
         # lagrangian_multiplier = max(0, lambda + lr * (violation - limit))
