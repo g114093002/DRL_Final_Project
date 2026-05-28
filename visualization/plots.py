@@ -3,8 +3,9 @@ import plotly.graph_objects as graph_objects
 import pandas as pd
 
 def plot_time_series(results_df, metric='soc', title="Time Series Analysis"):
-    # results_df should be a combined df or we handle single
-    fig = px.line(results_df, x=results_df.index, y=metric, color='Agent', title=title)
+    # Use color='Agent' only if the column exists
+    color_col = 'Agent' if 'Agent' in results_df.columns else None
+    fig = px.line(results_df, x=results_df.index, y=metric, color=color_col, title=title)
     fig.update_layout(template="plotly_dark", height=400)
     return fig
 
