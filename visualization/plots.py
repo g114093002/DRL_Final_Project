@@ -30,31 +30,31 @@ def _apply_research_theme(fig, title="", height=400):
     fig.update_layout(
         title={
             'text': f"<b>{title.upper()}</b>", 
-            'font': {'size': 16, 'color': '#FFFFFF'}, # Brighter white for title
-            'y': 0.98, 'x': 0.05, 'xanchor': 'left', 'yanchor': 'top'
+            'font': {'size': 24, 'color': '#FFFFFF'}, # 強化的純白標題
+            'y': 0.98, 'x': 0.5, 'xanchor': 'center', 'yanchor': 'top' # 標題置中
         },
         template="plotly_dark",
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(15, 23, 42, 0.5)',
-        font={'family': 'Inter', 'color': PALETTE['text_main']}, # Higher contrast text
-        margin=dict(l=60, r=40, t=140, b=80), # Further increased top margin to prevent overlap
+        paper_bgcolor='rgba(15, 23, 42, 0.98)',
+        plot_bgcolor='rgba(30, 41, 59, 0.5)',
+        font={'family': 'Inter, sans-serif', 'color': '#E2E8F0'},
+        margin=dict(l=60, r=40, t=140, b=80), # 增加間距防止標題與圖例重疊
         height=height,
         showlegend=True,
         legend=dict(
             orientation="h", 
-            yanchor="bottom", y=1.1, # Move legend higher to give title more room
-            xanchor="right", x=1.0,
-            font={'size': 11, 'color': PALETTE['text_main']}, # Brighter font for legend
+            yanchor="bottom", y=1.05, # 將圖例移到標題下方，防止遮擋
+            xanchor="center", x=0.5,
+            font={'size': 14, 'color': '#FFFFFF'},
             bgcolor='rgba(0,0,0,0)',
             title_text="" 
         ),
         xaxis=dict(
-            gridcolor=PALETTE['grid'], linecolor=PALETTE['axis'], showline=True,
-            tickfont={'size': 11, 'color': PALETTE['text_muted']}, title={'font': {'size': 12}, 'standoff': 15}
+            gridcolor='rgba(255, 255, 255, 0.06)', linecolor='rgba(255, 255, 255, 0.12)', showline=True,
+            tickfont={'size': 12, 'color': '#94A3B8'}, title={'font': {'size': 14}, 'standoff': 15}
         ),
         yaxis=dict(
-            gridcolor=PALETTE['grid'], linecolor=PALETTE['axis'], showline=True,
-            tickfont={'size': 11, 'color': PALETTE['text_muted']}, title={'font': {'size': 12}, 'standoff': 15}
+            gridcolor='rgba(255, 255, 255, 0.06)', linecolor='rgba(255, 255, 255, 0.12)', showline=True,
+            tickfont={'size': 12, 'color': '#94A3B8'}, title={'font': {'size': 14}, 'standoff': 15}
         )
     )
     fig.update_xaxes(showgrid=True, zeroline=False)
@@ -89,14 +89,15 @@ def plot_reward_breakdown(df):
 
 def plot_policy_behavior(df_results, x_col='price_usd_kwh', y_col='batt_kw', color_col='soc', title="Agent Strategic Reflexes"):
     # 使用更有直覺感的配色：從紅色（空電）到綠色（滿電）
+    # 使用極高對比的紅黃綠配色
     fig = px.scatter(df_results, x=x_col, y=y_col, color=color_col,
-                    color_continuous_scale='RdYlGn', opacity=0.8,
+                    color_continuous_scale='RdYlGn', opacity=0.9,
                     labels={
                         'price_usd_kwh': 'Market Price ($/kWh)',
                         'batt_kw': 'Action (kW) [>0 Discharge, <0 Charge]',
-                        'soc': 'SoC Status (Red: Empty, Green: Full)'
+                        'soc': 'SoC Level (Red: LOW, Green: HIGH)'
                     })
-    fig.update_traces(marker=dict(size=6, line=dict(width=0.5, color='gray')))
+    fig.update_traces(marker=dict(size=8, line=dict(width=1, color='white'))) # 加大點的大小並加白邊
     fig.add_hline(y=0, line=dict(color='#FFF', width=0.8, dash='dash'))
     
     # 優化佈局與說明
