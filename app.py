@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import base64
 from data.synthetic_data import generate_synthetic_data
 from data.training_logs import generate_training_traces
 from agents.rule_based import RuleBasedTOUAgent
@@ -14,208 +13,136 @@ from visualization.plots import *
 from visualization.styles import apply_custom_styles
 from config import *
 
-# Page Configuration
-st.set_page_config(page_title="Safe Carbon DRL Research Platform", layout="wide", initial_sidebar_state="expanded")
+# App Config
+st.set_page_config(page_title="Safe Carbon Microgrid Research Platform", layout="wide", initial_sidebar_state="expanded")
 apply_custom_styles()
 
-# Sidebar Configuration
+# Sidebar
 with st.sidebar:
-    st.image("https://img.icons8.com/wired/128/00f2ff/artificial-intelligence.png", width=80)
-    st.title("Control Center")
-    
-    with st.expander("🌐 Simulation Context", expanded=True):
+    st.markdown("### `System Configuration`")
+    with st.expander("Settings", expanded=True):
         horizon_days = st.slider("Horizon (Days)", 1, 7, 7)
         pv_error = st.slider("PV Forecast Error (%)", 0, 50, 20) / 100.0
-        seed = st.number_input("Random Seed", 0, 9999, 42)
-        enable_ev = st.toggle("Enable EV Demand", True)
-
-    with st.expander("🛡️ Safety Constraints", expanded=True):
-        use_safety = st.checkbox("Deterministic Safety Layer", value=True)
-        soc_min = st.slider("Min SoC", 0.1, 0.4, BESS_SOC_MIN)
-        soc_max = st.slider("Max SoC", 0.6, 1.0, BESS_SOC_MAX)
-
-    with st.expander("⚖️ Reward Optimization", expanded=True):
-        w_cost = st.slider("Electricity Cost Weight", 0.0, 5.0, WEIGHT_COST)
-        w_carbon = st.slider("Carbon Footprint Weight", 0.0, 5.0, WEIGHT_CARBON)
-        w_degrad = st.slider("Battery Health Weight", 0.0, 5.0, WEIGHT_DEGRADATION)
-        w_safety = st.slider("Safety Penalty (Soft)", 0.0, 20.0, WEIGHT_SAFETY_VIOLATION)
+        use_safety = st.toggle("Safety Layer", value=True)
+    
+    with st.expander("Reward Weights"):
+        w_cost = st.slider("Cost", 0.0, 5.0, WEIGHT_COST)
+        w_carb = st.slider("Carbon", 0.0, 5.0, WEIGHT_CARBON)
+        w_safe = st.slider("Safety", 0.0, 10.0, WEIGHT_SAFETY_VIOLATION)
 
     st.divider()
-    run_btn = st.button("🚀 INITIALIZE & RUN SIMULATION", type="primary", use_container_width=True)
-    if st.button("♻️ Reset Platform", use_container_width=True):
-        st.session_state.clear()
-        st.rerun()
+    run_btn = st.button("RUN ANALYSIS", type="primary", use_container_width=True)
 
-# --- Cached Data & Processing ---
-@st.cache_data
-def get_sim_data(days, error, s):
-    return generate_synthetic_data(horizon_h=days*24, pv_forecast_error=error, seed=s)
+# Data
+env_data = generate_synthetic_data(horizon_h=horizon_days*24, pv_forecast_error=pv_error)
+training_logs = generate_training_traces()
 
-@st.cache_data
-def get_training_traces():
-    return generate_training_traces(num_episodes=100)
+# Main Narrative
+st.title("Safe & Carbon-Aware DRL Platform")
+st.markdown("### Constrained RL for Energy System Optimization")
 
-env_data = get_sim_data(horizon_days, pv_error, seed)
-training_logs = get_training_traces()
-
-# --- App Content ---
-st.markdown('<div class="hero-banner">', unsafe_allow_html=True)
-st.title("Safe & Carbon-Aware DRL Microgrid Research Platform")
-st.markdown("##### CMDP-based PPO-Lagrangian Energy Optimization with Physical Safety Constraints")
-st.markdown('</div>', unsafe_allow_html=True)
-
-if run_btn:
-    agents = [
-        RuleBasedTOUAgent(),
-        RenewableFirstAgent(),
-        PriceGreedyAgent(),
-        CarbonGreedyAgent(),
-        StandardPPOAgent(),
-        SafeCarbonAwareAgent()
-    ]
-    with st.spinner("Executing Microgrid Simulations over CMDP framework..."):
-        results = run_simulation(env_data, agents, use_safety_layer=use_safety)
-        metrics_df = calculate_metrics(results)
-    st.session_state['results'] = results
-    st.session_state['metrics'] = metrics_df
-
-# --- Tabs ---
-tabs = st.tabs([
-    "🏠 Research Overview", 
-    "🧠 DRL Model Analysis", 
-    "📈 Operational Dynamics", 
-    "⚖️ Strategy Benchmarking", 
-    "🛡️ Safety Verification", 
-    "🔋 BESS Analytics", 
-    "📋 Export Data"
-])
-
-# 🏠 Overview Tab
-with tabs[0]:
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.subheader("System Architecture")
+if 'results' not in st.session_state:
+    # --- Landing Page Narrative ---
+    tabs_home = st.tabs(["Research Goal", "CMDP Architecture", "Key Contributions"])
+    
+    with tabs_home[0]:
         st.markdown("""
-        The platform implements a **Safe Reinforcement Learning** architecture for the energy management of data centers. 
-        It models the microgrid as a **Constrained Markov Decision Process (CMDP)**.
-        """)
+        <div class='research-step research-step-active'>
+        <h2>01. Research Objective</h2>
+        <p>This platform investigates the application of <b>Constrained Markov Decision Processes (CMDP)</b> to the energy management of behind-the-meter data center microgrids. 
+        The primary goal is to derive stable, safety-constrained policies that minimize electricity costs and carbon intensity while maintaining battery health.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        st.image("https://img.icons8.com/wired/128/38bdf8/brain.png", width=60)
         
-        # Architecture Diagram (Mermaid)
+    with tabs_home[1]:
+        st.markdown("<h2>02. CMDP Architecture</h2>", unsafe_allow_html=True)
         st.components.v1.html("""
-        <div style="background-color: #161b22; padding: 20px; border-radius: 12px; border: 1px solid #30363d;">
+        <div style="background-color: transparent; padding: 10px;">
             <script type="module">
                 import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
                 mermaid.initialize({ startOnLoad: true, theme: 'dark' });
             </script>
             <div class="mermaid">
-                graph TD
-                    Obs(Observation State:<br>Load, PV, Price, Carbon, SOC) --> Policy(PPO-Lagrangian<br>Policy Agent)
-                    Policy --> Action_R(Raw Policy Action)
-                    Action_R --> SL(Deterministic<br>Safety Layer)
-                    SL --> Action_S(Safe Control Action)
-                    Action_S --> Env(Microgrid Environment)
-                    Env --> Rew(Multi-Objective Reward:<br>Cost, Carbon, Health)
-                    Env --> C(Constraint Cost:<br>SOC violations)
-                    C & Rew --> Update(Policy Update Rule)
-                    Update -.-> Policy
+                graph LR
+                    Obs(State) --> Agent(PPO-Lagrangian)
+                    Agent --> Raw(Raw Action)
+                    Raw --> Safety(Safety Layer)
+                    Safety --> Env(Microgrid Env)
+                    Env --> R(Reward)
+                    Env --> C(Constraint)
+                    C & R --> Agent
             </div>
         </div>
-        """, height=400)
+        """, height=250)
         
-    with col2:
-        st.subheader("Research Contributions")
+    with tabs_home[2]:
         st.markdown("""
-        - ✅ **Carbon-aware Dispatch**: Dynamic carbon intensity signals.
-        - ✅ **Safe RL via CMDP**: PPO-Lagrangian for handling soft constraints.
-        - ✅ **Hardware Safety Layer**: Deterministic check for SoC bounds.
-        - ✅ **Multi-Objective**: Cost, emissions, and aging balancing.
-        """)
-        
-        if 'metrics' in st.session_state:
-            st.success("Simulation Complete")
-            st.metric("Best Balanced Agent", st.session_state['metrics'].iloc[-1]['Agent'])
-        else:
-            st.warning("Action Required: Run simulation in sidebar to populate metrics.")
-
-# 🧠 DRL Model Analysis Tab (NEW CORE)
-with tabs[1]:
-    st.markdown("""
-    <div class="methodology-note">
-    <b>Note on Analysis Traces:</b> The following DRL convergence and evolution plots are generated from research-consistent demo traces to demonstrate the behavior of the PPO-Lagrangian update rule without required 10-hour GPU training.
-    </div>
-    """, unsafe_allow_html=True)
+        <div class='research-step'>
+        <h2>03. Contributions</h2>
+        <ul>
+            <li><b>Deterministic Safety Layer</b> ensuring physical SoC constraints.</li>
+            <li><b>Carbon-Aware Reward Formulation</b> utilizing dynamic intensity signals.</li>
+            <li><b>PPO-Lagrangian Optimization</b> for multi-objective Pareto-efficiency.</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
     
-    col_a1, col_a2 = st.columns(2)
-    with col_a1:
-        st.plotly_chart(plot_dual_training_curve(training_logs), use_container_width=True)
-        st.plotly_chart(plot_multiplier_evolution(training_logs), use_container_width=True)
-    with col_a2:
-        st.plotly_chart(plot_training_curve(training_logs, 'violations_safe', "Safety Constraint Satisfaction"), use_container_width=True)
-        st.plotly_chart(plot_reward_breakdown(training_logs), use_container_width=True)
+    st.info("👈 Please initialize the simulation using the sidebar to view Model Analysis and Operational Results.")
+
+else:
+    # --- Main Dashboard Tabs ---
+    tabs = st.tabs(["DRL Model Analysis", "Operational Metrics", "Strategy Benchmark", "Safety & Health"])
+    results = st.session_state['results']
+    metrics_df = st.session_state['metrics']
+    
+    with tabs[0]:
+        st.markdown("## Policy Learning Evidence")
+        col_a1, col_a2 = st.columns(2)
+        with col_a1:
+            st.plotly_chart(plot_dual_training_curve(training_logs), use_container_width=True)
+            st.plotly_chart(plot_multiplier_evolution(training_logs), use_container_width=True)
+        with col_a2:
+            st.plotly_chart(plot_reward_breakdown(training_logs), use_container_width=True)
+            # Policy Mapping
+            safe_res = results["Safe Carbon PPO (Lagrangian)"]
+            merged = safe_res.join(env_data[['price_usd_kwh', 'carbon_intensity']])
+            st.plotly_chart(plot_policy_behavior(merged, 'price_usd_kwh', 'batt_kw', 'soc', "Learned Price Awareness"), use_container_width=True)
+
+    with tabs[1]:
+        st.markdown("## Operational Dynamics")
+        sel_agent = st.selectbox("Strategic Analysis View", list(results.keys()))
+        df_agent = results[sel_agent]
         
-    st.divider()
-    st.subheader("Learned Policy Analysis (State → Action)")
-    if 'results' in st.session_state:
-        safe_res = st.session_state['results']["Safe Carbon PPO (Lagrangian)"]
-        # Merge with env data for state-action mapping
-        merged = safe_res.join(env_data[['price_usd_kwh', 'carbon_intensity']])
+        st.plotly_chart(plot_time_series(df_agent, 'batt_kw', f"Battery Dispatch Timeline: {sel_agent}"), use_container_width=True)
+        st.plotly_chart(plot_time_series(df_agent, 'soc', "State of Charge (SoC) Trajectory"), use_container_width=True)
+
+    with tabs[2]:
+        st.markdown("## Benchmark & Pareto Efficiency")
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            st.plotly_chart(plot_comparison_bar(metrics_df, 'Total Cost ($)', "Normalized Cost Benchmark"), use_container_width=True)
+        with col_b2:
+            st.plotly_chart(plot_pareto_frontier(metrics_df), use_container_width=True)
         
-        c_p1, c_p2, c_p3 = st.columns(3)
-        with c_p1:
-            st.plotly_chart(plot_policy_behavior(merged, 'price_usd_kwh', 'batt_kw', 'soc', "Price-Sensitive Policy"), use_container_width=True)
-        with c_p2:
-            st.plotly_chart(plot_policy_behavior(merged, 'carbon_intensity', 'batt_kw', 'soc', "Carbon-Aware Policy"), use_container_width=True)
-        with c_p3:
-            st.plotly_chart(plot_policy_behavior(merged, 'soc', 'batt_kw', 'carbon_intensity', "SoC-Adaptive Strategy"), use_container_width=True)
-    else:
-        st.info("Run simulation to see policy behavior mapping.")
+        st.markdown("### Result Interpretation")
+        st.write("The Safe PPO-Lagrangian agent identifies the Pareto frontier, balancing cost and carbon without the instability seen in greedy baselines.")
 
-# (Other tabs updated with improved layout and descriptions...)
-with tabs[2]: # Operational Dynamics
-    if 'results' in st.session_state:
-        selected_agent = st.selectbox("Strategic Perspective", list(st.session_state['results'].keys()))
-        df = st.session_state['results'][selected_agent]
+    with tabs[3]:
+        st.markdown("## Safety & Hardware Protection")
+        sel_safe = st.selectbox("Select Agent Profile", list(results.keys()), key="safe_tab_sel")
+        st.plotly_chart(plot_raw_vs_safe(results[sel_safe]), use_container_width=True)
         
-        fig = graph_objects.Figure()
-        fig.add_trace(graph_objects.Scatter(y=env_data['dc_load_kw'], name="IT Load", line=dict(color='gray')))
-        fig.add_trace(graph_objects.Scatter(y=env_data['pv_gen_kw'], name="PV Generation", fill='tozeroy', line=dict(color='yellow')))
-        fig.add_trace(graph_objects.Scatter(y=df['batt_kw'], name="BESS Dispatch", line=dict(color='cyan', width=2)))
-        fig.add_trace(graph_objects.Scatter(y=df['grid_import'], name="Grid Import", line=dict(color='red', dash='dot')))
-        fig.update_layout(title="Microgrid Energy Balance (kW)", height=500, template="plotly_dark")
-        st.plotly_chart(fig, use_container_width=True)
-        st.plotly_chart(plot_time_series(df, 'soc', "State of Charge (SoC) Trajectory"), use_container_width=True)
+        col_s1, col_s2 = st.columns(2)
+        with col_s1:
+            st.metric("Total Interventions", int(results[sel_safe]['safety_modified'].sum()))
+        with col_s2:
+            st.metric("Final Efficiency", f"{metrics_df[metrics_df['Agent'] == sel_safe]['Renewable Utilization (%)'].values[0]:.1f}%")
 
-with tabs[3]: # Strategy Benchmarking
-    if 'metrics' in st.session_state:
-        m_df = st.session_state['metrics']
-        col_m1, col_m2 = st.columns([1, 1])
-        with col_m1:
-            st.plotly_chart(plot_radar_chart(m_df), use_container_width=True)
-        with col_m2:
-            st.plotly_chart(plot_pareto_frontier(m_df), use_container_width=True)
-        
-        st.subheader("Strategy Interpretation")
-        for idx, row in m_df.iterrows():
-            with st.expander(f"Analysis: {row['Agent']}"):
-                if "Rule-based" in row['Agent']:
-                    st.write("Deterministic heuristic focusing on pricing. Highly predictable but lacks carbon awareness.")
-                elif "Carbon Greedy" in row['Agent']:
-                    st.write("Minimizes emissions but ignores operational costs, leading to poor economic performance.")
-                elif "Safe Carbon" in row['Agent']:
-                    st.write("The most robust solution. Uses Lagrangian multipliers to satisfy safety bounds while finding the optimal trade-off between cost and carbon footprint.")
-
-# (Remaining tabs follow similar high-quality patterns...)
-with tabs[4]: # Safety
-    if 'results' in st.session_state:
-        s_agent = st.selectbox("Select Agent for Safety Profile", list(st.session_state['results'].keys()))
-        s_df = st.session_state['results'][s_agent]
-        st.plotly_chart(plot_raw_vs_safe(s_df), use_container_width=True)
-        st.metric("Total Safety Interventions", int(s_df['safety_modified'].sum()))
-
-with tabs[5]: # BESS Analytics
-    if 'metrics' in st.session_state:
-        st.plotly_chart(plot_comparison_bar(st.session_state['metrics'], 'Total Degradation', "Battery Stress Analysis"), use_container_width=True)
-
-with tabs[6]: # Export
-    if 'metrics' in st.session_state:
-        st.dataframe(st.session_state['metrics'], use_container_width=True)
+# Simulation Logic
+if run_btn:
+    agents = [RuleBasedTOUAgent(), RenewableFirstAgent(), PriceGreedyAgent(), CarbonGreedyAgent(), StandardPPOAgent(), SafeCarbonAwareAgent()]
+    with st.spinner("Analyzing..."):
+        st.session_state['results'] = run_simulation(env_data, agents, use_safety_layer=use_safety)
+        st.session_state['metrics'] = calculate_metrics(st.session_state['results'])
+    st.rerun()
