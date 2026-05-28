@@ -4,7 +4,7 @@ import numpy as np
 from data.synthetic_data import generate_synthetic_data
 from data.training_logs import generate_training_traces
 from agents.rule_based import RuleBasedTOUAgent
-from agents.renewable_first import RenewableFirstAgent
+from agents.rule_based import RuleBasedTOUAgent
 from agents.greedy import PriceGreedyAgent, CarbonGreedyAgent
 from agents.standard_ppo import StandardPPOAgent
 from agents.safe_carbon_agent import SafeCarbonAwareAgent
@@ -119,7 +119,7 @@ else:
         st.plotly_chart(plot_raw_vs_safe(results[sel_safe]), use_container_width=True, config={'displayModeBar': False})
 
 if run_btn:
-    agents = [RuleBasedTOUAgent(), RenewableFirstAgent(), PriceGreedyAgent(), CarbonGreedyAgent(), StandardPPOAgent(), SafeCarbonAwareAgent()]
+    agents = [RuleBasedTOUAgent(), PriceGreedyAgent(), CarbonGreedyAgent(), StandardPPOAgent(), SafeCarbonAwareAgent()]
     with st.spinner("Executing Research Engine..."):
         st.session_state['results'] = run_simulation(env_data, agents, use_safety_layer=use_safety)
         st.session_state['metrics'] = calculate_metrics(st.session_state['results'])
