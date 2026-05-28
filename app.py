@@ -19,19 +19,27 @@ apply_custom_styles()
 
 # Sidebar
 with st.sidebar:
-    st.markdown("### `System Configuration`")
-    with st.expander("Settings", expanded=True):
-        horizon_days = st.slider("Horizon (Days)", 1, 7, 7)
-        pv_error = st.slider("PV Forecast Error (%)", 0, 50, 20) / 100.0
-        use_safety = st.toggle("Safety Layer", value=True)
+    st.markdown('<div class="sidebar-header">System Control</div>', unsafe_allow_html=True)
     
-    with st.expander("Reward Weights"):
-        w_cost = st.slider("Cost", 0.0, 5.0, WEIGHT_COST)
-        w_carb = st.slider("Carbon", 0.0, 5.0, WEIGHT_CARBON)
-        w_safe = st.slider("Safety", 0.0, 10.0, WEIGHT_SAFETY_VIOLATION)
+    with st.expander("📊 Simulation Settings", expanded=True):
+        horizon_days = st.slider("Horizon (Days)", 1, 7, 7)
+        pv_error = st.slider("Forecast Uncertainty (%)", 0, 50, 20) / 100.0
+        use_safety = st.toggle("Enable Safety Constraints", value=True)
+    
+    st.markdown('<div class="sidebar-header">Safety Constraints</div>', unsafe_allow_html=True)
+    with st.expander("🛡️ Bound Management"):
+        st.markdown("<p>Configure hardware-level SoC protection limits.</p>", unsafe_allow_html=True)
+        # Placeholder for more granular bounds if needed
+        st.caption("Active SoC Buffer: 20% - 90%")
+
+    st.markdown('<div class="sidebar-header">Reward Weights</div>', unsafe_allow_html=True)
+    with st.expander("⚖️ Optimization Objective"):
+        w_cost = st.slider("Economic Reward", 0.0, 5.0, WEIGHT_COST)
+        w_carb = st.slider("Carbon Mitigation", 0.0, 5.0, WEIGHT_CARBON)
+        w_safe = st.slider("Safety Penalty", 0.0, 10.0, WEIGHT_SAFETY_VIOLATION)
 
     st.divider()
-    run_btn = st.button("RUN ANALYSIS", type="primary", use_container_width=True)
+    run_btn = st.button("RUN ENGINE ANALYSIS", type="primary", use_container_width=True)
 
 # Data
 env_data = generate_synthetic_data(horizon_h=horizon_days*24, pv_forecast_error=pv_error)

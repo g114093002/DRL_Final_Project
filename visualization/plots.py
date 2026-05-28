@@ -19,7 +19,7 @@ def _get_agent_color_map(agents):
 
 def _apply_pro_layout(fig, title="", height=450):
     fig.update_layout(
-        title={'text': title, 'font': {'size': 16, 'color': '#E5E7EB', 'weight': '600'}},
+        title={'text': f"<b>{title}</b>", 'font': {'size': 16, 'color': '#E5E7EB'}},
         template="plotly_dark",
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
