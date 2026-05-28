@@ -4,7 +4,7 @@ from config import DC_LOAD_BASE_KW, DC_LOAD_VAR_KW, PV_CAPACITY_KW, DEFAULT_HORI
 
 def generate_synthetic_data(horizon_h=DEFAULT_HORIZON_H, pv_forecast_error=0.1, seed=42):
     np.random.seed(seed)
-    timestamps = pd.date_range(start='2024-01-01', periods=horizon_h, freq='H')
+    timestamps = pd.date_range(start='2024-01-01', periods=horizon_h, freq='h')
     hours = np.arange(horizon_h) % 24
     days = np.arange(horizon_h) // 24
     
