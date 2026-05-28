@@ -159,6 +159,24 @@ def plot_operational_fidelity(df, env_data, title="High-Fidelity Operational Ana
         
     return fig
 
+def plot_tradeoff_thermal_map(df):
+    # Analyzing how Carbon vs Price impacts Action
+    fig = px.density_heatmap(df, x='price_usd_kwh', y='carbon_intensity', z='batt_kw',
+                           histfunc='avg', nbinsx=15, nbinsy=15,
+                           color_continuous_scale='RdBu_r', 
+                           title="Strategic Conflict Map (Price vs Carbon vs Action)")
+    fig.update_layout(xaxis_title="Market Price ($/kWh)", yaxis_title="Carbon Intensity (kg/kWh)")
+    return _apply_research_theme(fig, "Decision Trade-off Heatmap")
+
+def plot_soc_bottleneck_analysis(df):
+    # Distribution of SoC to see if we are hitting bounds (0 or 1)
+    fig = px.histogram(df, x='soc', nbins=20, color_discrete_sequence=[PALETTE['blue']])
+    fig.update_layout(xaxis_title="State of Charge (SoC)", yaxis_title="Frequency (Timesteps)")
+    # Add boundary indicators
+    fig.add_vline(x=0.1, line=dict(color=PALETTE['red'], dash='dash', width=1))
+    fig.add_vline(x=0.9, line=dict(color=PALETTE['red'], dash='dash', width=1))
+    return _apply_research_theme(fig, "SoC Bottleneck Distribution")
+
 def plot_raw_vs_safe(df):
     fig = graph_objects.Figure()
     fig.add_trace(graph_objects.Scatter(y=df['batt_kw'], name="SAFE OUTPUT", line=dict(color=PALETTE['cyan'], width=1.5)))
