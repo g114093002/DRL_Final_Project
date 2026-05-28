@@ -31,29 +31,33 @@ def _apply_research_theme(fig, title="", height=400):
     fig.update_layout(
         title={
             'text': f"<b>{title.upper()}</b>", 
-            'font': {'size': 14, 'color': PALETTE['text_muted']}
+            'font': {'size': 16, 'color': '#FFFFFF'}, # Brighter white for title
+            'y': 0.95, 'x': 0.05, 'xanchor': 'left', 'yanchor': 'top'
         },
         template="plotly_dark",
         paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor=PALETTE['bg_chart'],
-        font={'family': 'Inter', 'color': PALETTE['text_muted']},
-        margin=dict(l=50, r=30, t=60, b=40),
+        plot_bgcolor='rgba(15, 23, 42, 0.5)',
+        font={'family': 'Inter', 'color': PALETTE['text_main']}, # Higher contrast text
+        margin=dict(l=60, r=40, t=110, b=80), # Increased top margin to prevent title/legend overlap
         height=height,
         showlegend=True,
         legend=dict(
-            orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
-            font={'size': 10}, bgcolor='rgba(0,0,0,0)'
+            orientation="h", 
+            yanchor="bottom", y=1.02, # Position legend slightly above the chart area
+            xanchor="right", x=1.0,
+            font={'size': 11, 'color': PALETTE['text_main']}, # Brighter font for legend
+            bgcolor='rgba(0,0,0,0)',
+            title_text="" 
         ),
         xaxis=dict(
             gridcolor=PALETTE['grid'], linecolor=PALETTE['axis'], showline=True,
-            tickfont={'size': 11}, title={'font': {'size': 12}}
+            tickfont={'size': 11, 'color': PALETTE['text_muted']}, title={'font': {'size': 12}, 'standoff': 15}
         ),
         yaxis=dict(
             gridcolor=PALETTE['grid'], linecolor=PALETTE['axis'], showline=True,
-            tickfont={'size': 11}, title={'font': {'size': 12}}
+            tickfont={'size': 11, 'color': PALETTE['text_muted']}, title={'font': {'size': 12}, 'standoff': 15}
         )
     )
-    # Default settings for all axes
     fig.update_xaxes(showgrid=True, zeroline=False)
     fig.update_yaxes(showgrid=True, zeroline=False)
     return fig
@@ -61,44 +65,50 @@ def _apply_research_theme(fig, title="", height=400):
 def plot_dual_training_curve(df):
     fig = graph_objects.Figure()
     fig.add_trace(graph_objects.Scatter(x=df['episode'], y=df['reward_safe'], 
-                                 name="PPO-LAGRANGIAN", line=dict(color=PALETTE['cyan'], width=1.5)))
+                                 name="SAFE PPO (LAGRANGIAN)", line=dict(color=PALETTE['cyan'], width=2)))
     fig.add_trace(graph_objects.Scatter(x=df['episode'], y=df['reward_std'], 
-                                 name="STANDARD PPO", line=dict(color=PALETTE['text_muted'], width=1, dash='dot')))
+                                 name="BASELINE PPO", line=dict(color=PALETTE['text_muted'], width=1.5, dash='dot')))
     return _apply_research_theme(fig, "Convergence Dynamics")
 
 def plot_multiplier_evolution(df):
     fig = px.line(df, x='episode', y='lagrangian_lambda', color_discrete_sequence=[PALETTE['cyan']])
-    fig.update_traces(line=dict(width=1.5))
-    return _apply_research_theme(fig, "Lagrangian (λ) Growth")
+    fig.update_traces(line=dict(width=2))
+    return _apply_research_theme(fig, "Lagrangian Multiplier (λ)")
 
 def plot_reward_breakdown(df):
-    cols = ['comp_cost', 'comp_carbon', 'comp_degrad', 'comp_safety']
-    colors = [PALETTE['cyan'], PALETTE['blue'], PALETTE['violet'], PALETTE['red']]
-    fig = px.area(df, x='episode', y=cols, color_discrete_sequence=colors)
+    # Map technical names to descriptive ones
+    labels = {
+        'comp_cost': 'Economic Efficiency',
+        'comp_carbon': 'Carbon Mitigation',
+        'comp_degrad': 'Battery Health',
+        'comp_safety': 'Safety Compliance'
+    }
+    plot_df = df.rename(columns=labels)
+    fig = px.area(plot_df, x='episode', y=list(labels.values()), 
+                 color_discrete_sequence=[PALETTE['cyan'], PALETTE['blue'], PALETTE['violet'], PALETTE['red']])
     fig.update_traces(line=dict(width=0.5))
-    return _apply_research_theme(fig, "Component Contribution")
+    return _apply_research_theme(fig, "Reward Component Breakdown")
 
-def plot_policy_behavior(df_results, x_col='price_usd_kwh', y_col='batt_kw', color_col='soc', title="Policy Mapping"):
+def plot_policy_behavior(df_results, x_col='price_usd_kwh', y_col='batt_kw', color_col='soc', title="Policy Decision Map"):
     fig = px.scatter(df_results, x=x_col, y=y_col, color=color_col,
-                    color_continuous_scale='Blues', opacity=0.6)
-    fig.update_traces(marker=dict(size=4))
-    fig.add_hline(y=0, line=dict(color=PALETTE['text_muted'], width=0.5, dash='dash'))
+                    color_continuous_scale='Blues', opacity=0.7)
+    fig.update_traces(marker=dict(size=5))
+    fig.add_hline(y=0, line=dict(color='#FFF', width=0.5, dash='dash'))
     return _apply_research_theme(fig, title)
 
 def plot_pareto_frontier(metrics_df):
     cmap = _get_agent_color_map(metrics_df['Agent'].unique())
     fig = px.scatter(metrics_df, x='Total Cost ($)', y='Total Carbon (kg)', 
                      text='Agent', color='Agent', color_discrete_map=cmap,
-                     size='Total Degradation', size_max=15)
-    fig.update_traces(textposition='top center', marker=dict(opacity=0.8, line=dict(width=0.5, color='white')))
-    return _apply_research_theme(fig, "Pareto Trade-off", height=500)
+                     size='Total Degradation', size_max=20)
+    fig.update_traces(textposition='top center', marker=dict(opacity=0.9, line=dict(width=1, color='white')))
+    _apply_research_theme(fig, "Pareto Efficiency Analysis", height=500)
+    fig.update_layout(showlegend=False) # Redundant with labels
+    return fig
 
-def plot_comparison_bar(metrics_df, metric='Total Cost ($)', title="Benchmark Analysis"):
+def plot_comparison_bar(metrics_df, metric='Total Cost ($)', title="Benchmark Results"):
     cmap = _get_agent_color_map(metrics_df['Agent'].unique())
-    max_val = metrics_df[metric].max()
-    metrics_df['Score'] = metrics_df[metric] / max_val
-    fig = px.bar(metrics_df, x='Agent', y='Score', color='Agent', color_discrete_map=cmap)
-    fig.update_layout(yaxis=dict(range=[0, 1.1]))
+    fig = px.bar(metrics_df, x='Agent', y=metric, color='Agent', color_discrete_map=cmap)
     return _apply_research_theme(fig, title)
 
 def plot_time_series(results_df, metric='soc', title="Operation Logs"):
@@ -151,5 +161,5 @@ def plot_raw_vs_safe(df):
     # Highlight raw violations in red dots
     violations = np.where(df['safety_modified'], raw, np.nan)
     fig.add_trace(graph_objects.Scatter(y=raw, name="RAW POLICY", line=dict(color=PALETTE['text_muted'], width=1, dash='dot')))
-    fig.add_trace(graph_objects.Scatter(y=violations, name="VIOLATIONS", mode='markers', marker=dict(color=PALETTE['red'], size=3)))
+    fig.add_trace(graph_objects.Scatter(y=violations, name="VIOLATIONS", mode='markers', marker=dict(color=PALETTE['red'], size=4))) # Slightly larger markers for visibility
     return _apply_research_theme(fig, "Safety Layer Corrective Interventions")
