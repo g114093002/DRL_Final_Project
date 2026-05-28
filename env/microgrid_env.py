@@ -37,7 +37,8 @@ class MicrogridEnv(gym.Env):
         return self._get_obs(), {}
 
     def _get_obs(self):
-        row = self.df.iloc[self.current_step]
+        idx = min(self.current_step, self.horizon - 1)
+        row = self.df.iloc[idx]
         hour = row['hour']
         
         obs = np.array([
