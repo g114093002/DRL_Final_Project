@@ -98,20 +98,25 @@ class MicrogridEnv(gym.Env):
         if ev_active:
             self.ev_energy_served += ev_kw * TIME_STEP_H
             
-        # Reward
-        reward = -(WEIGHT_COST * cost + 
-                   WEIGHT_CARBON * carbon + 
-                   WEIGHT_DEGRADATION * degrad)
+        # Reward - 終極對齊強化
+        # 1. 基礎成本與碳排
+        reward = -(WEIGHT_COST * cost + WEIGHT_CARBON * carbon + WEIGHT_DEGRADATION * degrad)
         
-        # Violations (only if safety layer is off)
-        soc_violation = 0
-        if self.soc < BESS_SOC_MIN:
-            soc_violation = (BESS_SOC_MIN - self.soc)
-        elif self.soc > BESS_SOC_MAX:
-            soc_violation = (self.soc - BESS_SOC_MAX)
-        
+        # 2. 戰略對齊代獎勵 (Strategic Alignment Bonus)
+        # 如果在低價充電或高價放電，給予額外正向獎勵
+        if row['price_usd_kwh'] > 0.4 and batt_kw > 100: # 高價放電
+            reward += 100 * (batt_kw / BESS_MAX_DISCHARGE_KW) 
+        if row['price_usd_kwh'] < 0.15 and batt_kw < -100: # 低價充電
+            reward += 100 * (abs(batt_kw) / BESS_MAX_CHARGE_KW)
+            
+        # 3. 物理違規嚴厲懲罰 (Strategic Violation Penalty)
+        # 如果低電量(Red)還敢放電，給予重罰
+        if self.soc < 0.25 and batt_kw > 0:
+            reward -= 500 * (batt_kw / BESS_MAX_DISCHARGE_KW)
+            
+        # 4. 原有 SoC 邊界懲罰
         if soc_violation > 0:
-            reward -= WEIGHT_SAFETY_VIOLATION * soc_violation
+            reward -= (WEIGHT_SAFETY_VIOLATION * 2.0) * soc_violation
             
         self.prev_batt_power = batt_kw
         self.current_step += 1
