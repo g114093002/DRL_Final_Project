@@ -32,18 +32,18 @@ def _apply_research_theme(fig, title="", height=400):
         title={
             'text': f"<b>{title.upper()}</b>", 
             'font': {'size': 16, 'color': '#FFFFFF'}, # Brighter white for title
-            'y': 0.95, 'x': 0.05, 'xanchor': 'left', 'yanchor': 'top'
+            'y': 0.98, 'x': 0.05, 'xanchor': 'left', 'yanchor': 'top'
         },
         template="plotly_dark",
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(15, 23, 42, 0.5)',
         font={'family': 'Inter', 'color': PALETTE['text_main']}, # Higher contrast text
-        margin=dict(l=60, r=40, t=110, b=80), # Increased top margin to prevent title/legend overlap
+        margin=dict(l=60, r=40, t=140, b=80), # Further increased top margin to prevent overlap
         height=height,
         showlegend=True,
         legend=dict(
             orientation="h", 
-            yanchor="bottom", y=1.02, # Position legend slightly above the chart area
+            yanchor="bottom", y=1.1, # Move legend higher to give title more room
             xanchor="right", x=1.0,
             font={'size': 11, 'color': PALETTE['text_main']}, # Brighter font for legend
             bgcolor='rgba(0,0,0,0)',
@@ -101,7 +101,7 @@ def plot_pareto_frontier(metrics_df):
     fig = px.scatter(metrics_df, x='Total Cost ($)', y='Total Carbon (kg)', 
                      text='Agent', color='Agent', color_discrete_map=cmap,
                      size='Total Degradation', size_max=20)
-    fig.update_traces(textposition='top center', marker=dict(opacity=0.9, line=dict(width=1, color='white')))
+    fig.update_traces(textposition='bottom center', marker=dict(opacity=0.9, line=dict(width=1, color='white'))) # Moved text to bottom to avoid blocking center
     _apply_research_theme(fig, "Pareto Efficiency Analysis", height=500)
     fig.update_layout(showlegend=False) # Redundant with labels
     return fig
