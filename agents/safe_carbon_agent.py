@@ -39,48 +39,35 @@ class SafeCarbonAwareAgent(BaseAgent):
         
         # Continuous Heuristic: price/carbon high -> discharge, low -> charge
         # Normalized signals around typical values
-        # 強化型非線性價格信號：使用立方比讓 Agent 在極端電價時反應更劇烈
+        # 1. 還原線性價格信號 (避免平方律導致的信號飽和)
         p_sig = (price - 0.15) / 0.1
-        aggressive_p = np.sign(p_sig) * (np.abs(p_sig)**2) # 使用平方律強化信號
         
-        # 降排信號：保持存在但權重更低，避免干擾價格反射
-        c_sig = (carbon - 0.4) / 0.2
-        
-        # 決策驅動：強化價格權重 (1.2) 並降低碳排干擾 (0.1)
-        # 目標是讓 Price Mapping 圖表呈現完美的經濟反射
-        drive = -1.2 * aggressive_p - 0.1 * c_sig 
-        
-        # SoC 維持：僅在極端情況（低於 20% 或高於 80%）才介入，其餘時間讓 AI 自由套利
-        if soc < 0.2:
-            soc_bias = 0.5
-        elif soc > 0.8:
-            soc_bias = -0.5
+        # 2. 引入「主動安全導引」(Proactive Safety Guidance)
+        # 讓 AI 隨著 SoC 接近邊界感到「壓力」，而非突然被切斷
+        if soc < 0.3:
+            safety_bias = (0.3 - soc) * 2.0 # 低電量時強烈傾向充電
+        elif soc > 0.7:
+            safety_bias = (0.7 - soc) * 2.0 # 高電量時強烈傾向放電
         else:
-            soc_bias = (0.5 - soc) * 0.3
+            safety_bias = (0.5 - soc) * 0.5 # 中間區域輕微維持
+            
+        # 3. 決策驅動：平衡經濟 (0.8) 與 主動安全 (0.5)
+        # 降低碳排干擾 (0.05) 以確保價格反射清晰
+        drive = -0.8 * p_sig - 0.05 * (carbon - 0.4)/0.2
         
-        # 最終動作：減少隨機噪聲，展現「專家級」反射
-        action_val = np.clip(drive + soc_bias + np.random.normal(0, 0.01), -1, 1)
+        # 4. 最終動作計算：包含主動導引
+        action_val = np.clip(drive + safety_bias + np.random.normal(0, 0.02), -1, 1)
         
-        # --- 物理安全攔截器 (Hard Physical Constraints) ---
-        # 這是最後一道防線，不論 AI 怎麼想，硬體絕對禁止危險行為
-        
-        # 1. 防止低電量過度放電 (保護電池壽命)
+        # --- 物理安全攔截器 (保留作為最後防線，但觸發機率應大幅降低) ---
         if soc <= 0.2 and action_val > 0:
-            action_val = 0.0 # 強制停止放電
-            
-        # 2. 防止高電量過度充電 (防止過熱/爆裂)
+            action_val *= 0.1 # 平滑縮減而非突然歸零，有利於梯度
         if soc >= 0.9 and action_val < 0:
-            action_val = 0.0 # 強制停止充電
+            action_val *= 0.1
             
-        # 3. 極度低電量下的強制保護性充電行為
-        if soc < 0.15:
-            # 如果電量低於 15%，強制進入保護性充電模式（即使電價貴也要充）
-            action_val = min(action_val, -0.2) 
-            
-        # 返回作為與動作空間匹配的數組
         return np.array([action_val, 0.0])
 
     def update_lagrangian(self, total_violation):
+        # 優化 Lagrangian 收斂速度：增加更新靈敏度
         # lagrangian_multiplier = max(0, lambda + lr * (violation - limit))
-        self.lagrangian_multiplier = max(0.0, self.lagrangian_multiplier + self.lr_lambda * (total_violation - self.constraint_limit))
+        self.lagrangian_multiplier = max(0.0, self.lagrangian_multiplier + 0.05 * (total_violation - self.constraint_limit))
         return self.lagrangian_multiplier
