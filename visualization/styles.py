@@ -4,17 +4,17 @@ def apply_custom_styles():
     st.markdown("""
         <style>
         /* High-End Research Console Style */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
         :root {
-            --bg-deep: #0B1220;
-            --sidebar-bg: #081018;
-            --card-bg: rgba(17, 24, 39, 0.78);
+            --bg-deep: #080C14;
+            --sidebar-bg: #05080F;
+            --card-bg: rgba(17, 24, 39, 0.85);
             --primary-accent: #38BDF8;
-            --text-main: #E2E8F0;
-            --text-muted: #94A3B8;
-            --border-soft: rgba(255, 255, 255, 0.06);
-            --grid-line: rgba(255, 255, 255, 0.04);
+            --text-main: #F1F5F9; /* Brighter white */
+            --text-muted: #CBD5E1; /* High contrast gray */
+            --border-soft: rgba(255, 255, 255, 0.1);
+            --grid-line: rgba(255, 255, 255, 0.05);
         }
 
         .main {
@@ -24,43 +24,50 @@ def apply_custom_styles():
         }
 
         /* Typography Scaling */
-        h1 { font-size: 52px !important; font-weight: 700 !important; color: white !important; margin-bottom: 8px !important; letter-spacing: -0.04em !important; }
-        h2 { font-size: 30px !important; font-weight: 600 !important; color: white !important; margin-top: 32px !important; margin-bottom: 16px !important; border: none !important; }
-        h3 { font-size: 18px !important; font-weight: 500 !important; color: var(--text-muted) !important; margin-bottom: 12px !important; }
-        p, li { font-size: 15px; color: var(--text-muted); line-height: 1.6; }
+        h1 { font-size: 48px !important; font-weight: 700 !important; color: white !important; margin-bottom: 8px !important; letter-spacing: -0.04em !important; }
+        h2 { font-size: 28px !important; font-weight: 600 !important; color: white !important; margin-top: 32px !important; margin-bottom: 24px !important; border: none !important; }
+        h3 { font-size: 20px !important; font-weight: 600 !important; color: var(--primary-accent) !important; margin-bottom: 12px !important; }
+        p, li { font-size: 16px; color: var(--text-muted); line-height: 1.6; font-weight: 400; }
 
         /* KPI Cards: High Density */
         div[data-testid="stMetric"] {
             background: var(--card-bg);
             border: 1px solid var(--border-soft);
-            border-radius: 6px;
-            padding: 12px 16px !important;
-            box-shadow: 0 0 20px rgba(0,0,0,0.2);
-            transition: all 0.2s ease;
-        }
-        div[data-testid="stMetric"]:hover {
-            border-color: rgba(56, 189, 248, 0.2);
-            box-shadow: 0 0 30px rgba(56, 189, 248, 0.05);
+            border-radius: 8px;
+            padding: 16px !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
         }
         div[data-testid="stMetric"] label p {
-            font-size: 11px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.08em;
             color: var(--text-muted) !important;
         }
         div[data-testid="stMetricValue"] div {
-            font-size: 22px !important;
-            font-weight: 600 !important;
+            font-size: 26px !important;
+            font-weight: 700 !important;
             color: white !important;
         }
 
-        /* Denser Layout */
-        .block-container {
-            padding-top: 2rem !important;
-            padding-bottom: 2rem !important;
-            max-width: 1400px !important;
+        /* Tabs Refinement: High Contrast */
+        .stTabs [data-baseweb="tab-list"] {
+            border-bottom: 1px solid var(--border-soft);
+            gap: 12px;
+            padding-bottom: 4px;
         }
-        
+        .stTabs [data-baseweb="tab"] {
+            font-size: 15px !important;
+            font-weight: 600 !important;
+            color: var(--text-muted) !important;
+            height: 48px;
+            background-color: transparent !important;
+        }
+        .stTabs [aria-selected="true"] {
+            color: var(--primary-accent) !important;
+            border-bottom: 3px solid var(--primary-accent) !important;
+        }
+
         /* Sidebar: Strict Console Look */
         .stSidebar {
             background-color: var(--sidebar-bg);
@@ -68,58 +75,39 @@ def apply_custom_styles():
         }
         .sidebar-header {
             color: var(--primary-accent);
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
-            margin-bottom: 8px;
-            opacity: 0.8;
-        }
-
-        /* Specialized Action Button */
-        div.stButton > button:first-child {
-            background: #111827;
-            border: 1px solid var(--primary-accent);
-            color: var(--primary-accent);
-            text-transform: uppercase;
-            font-weight: 600;
             font-size: 12px;
-            letter-spacing: 0.08em;
-            padding: 8px 16px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        div.stButton > button:first-child:hover {
-            background: var(--primary-accent);
-            color: #000;
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 12px;
+            padding-top: 10px;
         }
 
-        /* Plotly Custom Container Fix for rounded corners */
+        /* Plotly Custom Container Fix: Add top spacing */
         .js-plotly-plot {
+            margin-top: 1.5rem !important;
             border-radius: 8px;
             overflow: hidden;
             border: 1px solid var(--border-soft);
-            background-color: #0C1425 !important;
+            background-color: #0F172A !important;
         }
 
-        /* methodology note */
+        /* methodology note: High Contrast */
         .methodology-note {
-            background: rgba(56, 189, 248, 0.03);
-            border: 1px solid rgba(56, 189, 248, 0.1);
-            color: var(--text-muted);
-            padding: 12px 16px;
-            border-radius: 4px;
-            font-size: 13px;
-            margin-bottom: 24px;
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            color: #E2E8F0;
+            padding: 16px 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 32px;
+            line-height: 1.6;
         }
 
-        /* Tabs Refinement */
-        .stTabs [data-baseweb="tab-list"] {
-            border-bottom: 1px solid var(--border-soft);
-        }
-        .stTabs [data-baseweb="tab"] {
-            font-size: 14px;
-            height: 44px;
+        .block-container {
+            padding-top: 3rem !important;
+            max-width: 1400px !important;
         }
         </style>
     """, unsafe_allow_html=True)

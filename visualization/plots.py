@@ -22,7 +22,6 @@ def _get_agent_color_map(agents):
     color_map = {}
     for a in agents:
         if "Safe" in a: color_map[a] = PALETTE['cyan']
-        elif "Unsafe" in a or "Standard" in a: color_map[a] = PALETTE['red']
         elif "Rule" in a: color_map[a] = PALETTE['amber']
         else: color_map[a] = PALETTE['text_muted']
     return color_map
@@ -62,14 +61,12 @@ def _apply_research_theme(fig, title="", height=400):
     fig.update_yaxes(showgrid=True, zeroline=False)
     return fig
 
-def plot_dual_training_curve(df):
+def plot_single_training_curve(df):
     fig = graph_objects.Figure()
     fig.add_trace(graph_objects.Scatter(x=df['episode'], y=df['reward_safe'], 
                                  name="SAFE PPO (LAGRANGIAN)", line=dict(color=PALETTE['cyan'], width=2)))
-    fig.add_trace(graph_objects.Scatter(x=df['episode'], y=df['reward_std'], 
-                                 name="BASELINE PPO", line=dict(color=PALETTE['text_muted'], width=1.5, dash='dot')))
     fig.update_layout(yaxis=dict(title="Cumulative Reward (Score)"))
-    return _apply_research_theme(fig, "Convergence Dynamics")
+    return _apply_research_theme(fig, "Learning Curve (Optimized)")
 
 def plot_multiplier_evolution(df):
     fig = px.line(df, x='episode', y='lagrangian_lambda', color_discrete_sequence=[PALETTE['cyan']])

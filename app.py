@@ -6,7 +6,7 @@ from data.training_logs import generate_training_traces
 from agents.rule_based import RuleBasedTOUAgent
 from agents.rule_based import RuleBasedTOUAgent
 from agents.greedy import PriceGreedyAgent, CarbonGreedyAgent
-from agents.standard_ppo import StandardPPOAgent
+from agents.greedy import PriceGreedyAgent, CarbonGreedyAgent
 from agents.safe_carbon_agent import SafeCarbonAwareAgent
 from evaluation.simulator import run_simulation, calculate_metrics
 from visualization.plots import *
@@ -78,7 +78,7 @@ else:
         st.markdown("""<div class="methodology-note">ANALYSIS NOTE: Traces demonstrate PPO-Lagrangian stabilization and multiplier adjustment dynamics.</div>""", unsafe_allow_html=True)
         col_m1, col_m2 = st.columns(2)
         with col_m1:
-            st.plotly_chart(plot_dual_training_curve(training_logs), use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(plot_single_training_curve(training_logs), use_container_width=True, config={'displayModeBar': False})
             st.plotly_chart(plot_multiplier_evolution(training_logs), use_container_width=True, config={'displayModeBar': False})
         with col_m2:
             st.plotly_chart(plot_reward_breakdown(training_logs), use_container_width=True, config={'displayModeBar': False})
@@ -119,7 +119,7 @@ else:
         st.plotly_chart(plot_raw_vs_safe(results[sel_safe]), use_container_width=True, config={'displayModeBar': False})
 
 if run_btn:
-    agents = [RuleBasedTOUAgent(), PriceGreedyAgent(), CarbonGreedyAgent(), StandardPPOAgent(), SafeCarbonAwareAgent()]
+    agents = [RuleBasedTOUAgent(), PriceGreedyAgent(), CarbonGreedyAgent(), SafeCarbonAwareAgent()]
     with st.spinner("Executing Research Engine..."):
         st.session_state['results'] = run_simulation(env_data, agents, use_safety_layer=use_safety)
         st.session_state['metrics'] = calculate_metrics(st.session_state['results'])
