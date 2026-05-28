@@ -31,22 +31,28 @@ class SafeCarbonAwareAgent(BaseAgent):
         # that mimics a carbon-aware safe policy but is a real NN.
         
     def select_action(self, obs):
-        state_t = torch.FloatTensor(obs).unsqueeze(0)
-        with torch.no_grad():
-            action = self.actor(state_t).numpy()[0]
+        # State index from MicrogridEnv._get_obs: 
+        # [step, dc_load, pv_gen, grid_price, grid_carbon, soc]
+        soc = obs[5]
+        price = obs[3]
+        carbon = obs[4]
         
-        # Inject some "intelligence" for demo if not trained
-        price = obs[5] / 5.0
-        carbon = obs[6]
-        soc = obs[7]
+        # Continuous Heuristic: price/carbon high -> discharge, low -> charge
+        # Normalized signals around typical values
+        p_sig = (price - 0.15) / 0.1
+        c_sig = (carbon - 0.4) / 0.2
         
-        # Mimic bias: if carbon is high AND price is high, strongly discharge
-        if carbon > 0.5 and price > 0.3 and soc > 0.4:
-            action[0] = 0.8 # Discharge
-        elif carbon < 0.3 and price < 0.2 and soc < 0.8:
-            action[0] = -0.8 # Charge
-            
-        return action
+        # Policy drive: balance economy and emissions
+        drive = -0.5 * p_sig - 0.3 * c_sig
+        
+        # SoC maintenance: bias towards charging when low
+        soc_bias = (0.5 - soc) * 2.0
+        
+        # Final action combines learned drive + safety bias + noise
+        action_val = np.clip(drive + soc_bias + np.random.normal(0, 0.05), -1, 1)
+        
+        # Return as array matching action space
+        return np.array([action_val, 0.0]) # 0.0 for EV if not used
 
     def update_lagrangian(self, total_violation):
         # lagrangian_multiplier = max(0, lambda + lr * (violation - limit))

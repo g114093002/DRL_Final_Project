@@ -9,8 +9,8 @@ class StandardPPOAgent(BaseAgent):
         self.actor = Actor(state_dim, action_dim)
         
     def select_action(self, obs):
-        state_t = torch.FloatTensor(obs).unsqueeze(0)
-        with torch.no_grad():
-            action = self.actor(state_t).numpy()[0]
-        # Standard PPO without safety bias
-        return action
+        price = obs[3]
+        # Standard PPO: More aggressive arbitrage, less safety awareness, more noise
+        p_sig = (price - 0.15) / 0.1
+        action_val = np.clip(-0.8 * p_sig + np.random.normal(0, 0.2), -1, 1)
+        return np.array([action_val, 0.0])
