@@ -87,28 +87,24 @@ def plot_reward_breakdown(df):
     fig.update_traces(line=dict(width=0.5))
     return _apply_research_theme(fig, "Reward Component Breakdown")
 
-def plot_policy_behavior(df_results, x_col='price_usd_kwh', y_col='batt_kw', color_col='soc', title="Agent Strategic Reflexes"):
-    # 使用更有直覺感的配色：從紅色（空電）到綠色（滿電）
-    # 使用極高對比的紅黃綠配色
-    fig = px.scatter(df_results, x=x_col, y=y_col, color=color_col,
-                    color_continuous_scale='RdYlGn', opacity=0.9,
-                    labels={
-                        'price_usd_kwh': 'Market Price ($/kWh)',
-                        'batt_kw': 'Action (kW) [>0 Discharge, <0 Charge]',
-                        'soc': 'SoC Level (Red: LOW, Green: HIGH)'
-                    })
-    fig.update_traces(marker=dict(size=8, line=dict(width=1, color='white'))) # 加大點的大小並加白邊
-    fig.add_hline(y=0, line=dict(color='#FFF', width=0.8, dash='dash'))
+def plot_cumulative_value(df):
+    from plotly.subplots import make_subplots
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
     
-    # 優化佈局與說明
-    fig.update_layout(
-        coloraxis_colorbar=dict(
-            title="SoC Level",
-            tickvals=[0.2, 0.5, 0.8],
-            ticktext=["EMPTY", "MID", "FULL"]
-        )
-    )
-    return _apply_research_theme(fig, "Strategic Reflex Map (Price vs SoC)")
+    # 累積節省金額 (以 Rule-Based 為基底的假設節省)
+    cost_savings = (df['cost'].iloc[0] - df['cost']).cumsum()
+    # 累積減碳量
+    carbon_savings = (df['carbon'].iloc[0] - df['carbon']).cumsum()
+    
+    fig.add_trace(graph_objects.Scatter(x=df.index, y=cost_savings, name="Cumulative Savings ($)", 
+                                 line=dict(color=PALETTE['cyan'], width=2.5)), secondary_y=False)
+    fig.add_trace(graph_objects.Scatter(x=df.index, y=carbon_savings, name="Carbon Offset (kg)", 
+                                 line=dict(color=PALETTE['teal'], width=2, dash='dot')), secondary_y=True)
+    
+    fig.update_yaxes(title_text="Savings ($)", secondary_y=False)
+    fig.update_yaxes(title_text="Carbon Offset (kg)", secondary_y=True)
+    
+    return _apply_research_theme(fig, "Long-term Value Creation (Profit & Planet)")
 
 def plot_pareto_frontier(metrics_df):
     cmap = _get_agent_color_map(metrics_df['Agent'].unique())
