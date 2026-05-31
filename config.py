@@ -38,9 +38,9 @@ CURRENCY = "USD"
 UNIT_PRICE = f"{CURRENCY}/kWh"
 UNIT_CARBON = "kgCO2/kWh"
 
-# Reward Weights (Default)
-WEIGHT_COST = 1.0
-WEIGHT_CARBON = 2.0
+# Reward Weights (Cost-Optimized Formulation)
+WEIGHT_COST = 2.5
+WEIGHT_CARBON = 0.5
 WEIGHT_DEGRADATION = 0.5
 WEIGHT_PEAK_PENALTY = 1.0
 WEIGHT_EV_UNSERVED = 5.0

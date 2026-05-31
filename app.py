@@ -35,8 +35,16 @@ with st.sidebar:
     run_btn = st.button("EXECUTE ANALYSIS", use_container_width=True)
 
 # Persistent Data
+import os
 env_data = generate_synthetic_data(horizon_h=horizon_days*24, pv_forecast_error=pv_error)
-training_logs = generate_training_traces()
+if os.path.exists("real_training_logs.csv"):
+    try:
+        training_logs = pd.read_csv("real_training_logs.csv")
+    except Exception:
+        training_logs = generate_training_traces()
+else:
+    training_logs = generate_training_traces()
+
 
 # --- Landing & Dashboard Architecture ---
 st.title("Safe & Carbon-Aware DRL Platform")
@@ -60,6 +68,7 @@ if 'results' not in st.session_state:
 else:
     results = st.session_state['results']
     metrics_df = st.session_state['metrics']
+    sim_env_data = st.session_state.get('env_data', env_data)
     safe_res = results["Safe Carbon PPO (Lagrangian)"]
     safe_met = metrics_df[metrics_df['Agent'] == "Safe Carbon PPO (Lagrangian)"].iloc[0]
 
@@ -82,7 +91,7 @@ else:
             st.plotly_chart(plot_multiplier_evolution(training_logs), use_container_width=True, config={'displayModeBar': False})
         with col_m2:
             st.plotly_chart(plot_reward_breakdown(training_logs), use_container_width=True, config={'displayModeBar': False})
-            merged = safe_res.join(env_data[['price_usd_kwh', 'carbon_intensity']])
+            merged = safe_res.join(sim_env_data[['price_usd_kwh', 'carbon_intensity']])
             st.plotly_chart(plot_cumulative_value(merged), use_container_width=True, config={'displayModeBar': False})
         
         st.divider()
@@ -100,7 +109,7 @@ else:
         sel_agent = st.selectbox("Strategic Analysis Profile", list(results.keys()))
         df_agent = results[sel_agent]
         # High-Fidelity Sync Plot
-        st.plotly_chart(plot_operational_fidelity(df_agent, env_data, f"Fidelity Log: {sel_agent}"), use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(plot_operational_fidelity(df_agent, sim_env_data, f"Fidelity Log: {sel_agent}"), use_container_width=True, config={'displayModeBar': False})
 
     with tabs[2]:
         st.markdown("## Competitive Benchmarking")
@@ -123,4 +132,5 @@ if run_btn:
     with st.spinner("Executing Research Engine..."):
         st.session_state['results'] = run_simulation(env_data, agents, use_safety_layer=use_safety)
         st.session_state['metrics'] = calculate_metrics(st.session_state['results'])
+        st.session_state['env_data'] = env_data
     st.rerun()

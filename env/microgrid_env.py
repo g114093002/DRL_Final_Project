@@ -74,22 +74,38 @@ class MicrogridEnv(gym.Env):
         cost = grid_import * row['price_usd_kwh']
         carbon = grid_import * row['carbon_intensity']
         degrad = BESS_ALPHA * abs(batt_kw)
+        
+        # High SoC degradation penalty to prevent holding battery at high SoC for long periods
+        if self.soc > 0.8:
+            degrad += BESS_BETA * (self.soc - 0.8)
+            
+        # Quadratic action penalty to discourage extreme "bang-bang" control and encourage continuous control
+        degrad += 0.0001 * (batt_kw ** 2)
+        
         if np.sign(batt_kw) != np.sign(self.prev_batt_power) and abs(batt_kw) > 10:
             degrad += BESS_SWITCHING_PENALTY
             
         if ev_active: self.ev_energy_served += ev_kw * TIME_STEP_H
             
-        # Reward - 終極對齊強化
+        # Reward - Natively optimize cost, carbon and degradation
         reward = -(WEIGHT_COST * cost + WEIGHT_CARBON * carbon + WEIGHT_DEGRADATION * degrad)
-        if row['price_usd_kwh'] > 0.4 and batt_kw > 100: reward += 200 # 高價放電大加分
-        if row['price_usd_kwh'] < 0.15 and batt_kw < -100: reward += 200 # 低價充電大加分
+        
+        # Continuous and smooth reward shaping for price-based charging/discharging
+        # Instead of massive discrete +200 steps, we use proportional rewards
+        if row['price_usd_kwh'] > 0.4 and batt_kw > 0:
+            reward += 300.0 * (batt_kw / BESS_MAX_DISCHARGE_KW) * (row['price_usd_kwh'] - 0.4)
+        elif row['price_usd_kwh'] < 0.15 and batt_kw < 0:
+            reward += 300.0 * (-batt_kw / BESS_MAX_CHARGE_KW) * (0.15 - row['price_usd_kwh'])
         
         soc_violation = 0
         if self.soc < BESS_SOC_MIN: soc_violation = (BESS_SOC_MIN - self.soc)
         elif self.soc > BESS_SOC_MAX: soc_violation = (self.soc - BESS_SOC_MAX)
         
         if soc_violation > 0: reward -= (WEIGHT_SAFETY_VIOLATION * 5.0) * soc_violation
-        if self.soc < 0.25 and batt_kw > 0: reward -= 500 # 低電量放電重罰
+        
+        # Continuous smooth penalty for discharging BESS at low SoC
+        if self.soc < 0.25 and batt_kw > 0:
+            reward -= 50.0 * (0.25 - self.soc) * (batt_kw / BESS_MAX_DISCHARGE_KW)
             
         self.prev_batt_power = batt_kw
         self.current_step += 1
