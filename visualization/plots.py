@@ -30,7 +30,7 @@ def _apply_research_theme(fig, title="", height=400):
     fig.update_layout(
         title={
             'text': f"<b>{title.upper()}</b>", 
-            'font': {'size': 24, 'color': '#FFFFFF'}, # 強化的純白標題
+            'font': {'size': 18, 'color': '#FFFFFF'}, # 縮小標題字型從 24 至 18 防止溢出
             'y': 0.98, 'x': 0.5, 'xanchor': 'center', 'yanchor': 'top' # 標題置中
         },
         template="plotly_dark",
